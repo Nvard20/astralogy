@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hy">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -78,6 +78,7 @@ body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text);
 .orbit::after { inset:5px; border-top-color:var(--violet); animation:spin 0.8s linear infinite reverse; }
 @keyframes spin { to{transform:rotate(360deg)} }
 .loading p { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; animation:pulse 1.5s ease-in-out infinite; }
+.loading-phase { font-size:9px; color:rgba(201,169,110,0.5); letter-spacing:1.5px; text-transform:uppercase; margin-top:4px; min-height:14px; }
 @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
 
 /* result */
@@ -88,6 +89,9 @@ body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text);
 .result-meta h3 { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:400; color:var(--gold-light); letter-spacing:1px; }
 .result-meta .date { font-size:10px; color:var(--muted); letter-spacing:1px; margin-top:2px; }
 .result-text { font-size:16px; font-weight:300; line-height:1.75; color:var(--text); margin-bottom:16px; }
+.lang-toggle { display:flex; gap:6px; margin-bottom:12px; }
+.lang-btn { flex:1; padding:6px; background:none; border:1px solid var(--border); border-radius:10px; color:var(--muted); font-family:'Outfit',sans-serif; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
+.lang-btn.active { background:rgba(201,169,110,0.12); border-color:rgba(201,169,110,0.4); color:var(--gold-light); }
 .stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .stat { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:12px; padding:9px 11px; text-align:center; }
 .stat .stat-label { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
@@ -112,6 +116,10 @@ body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text);
 .cat-val { font-size:11px; color:var(--gold-light); font-family:'Cormorant Garamond',serif; font-weight:600; }
 .compat-desc { font-family:'Cormorant Garamond',serif; font-size:15px; font-style:italic; line-height:1.7; color:var(--text); padding:11px 13px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:12px; }
 
+/* translation badge */
+.translated-badge { display:inline-flex; align-items:center; gap:5px; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(201,169,110,0.6); margin-bottom:10px; }
+.translated-badge::before { content:'✦'; font-size:8px; }
+
 /* error */
 .error { margin-top:13px; padding:11px; border-radius:12px; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2); font-size:12px; color:#fca5a5; text-align:center; display:none; }
 .error.show { display:block; }
@@ -130,22 +138,22 @@ body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text);
   <div class="header">
     <p class="eyebrow">✦ Celestial Guidance ✦</p>
     <h1>Celestia</h1>
-    <p class="tagline">Your stars speak today</p>
+    <p class="tagline">Ձեր աստղերն այսօր խոսում են</p>
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('horoscope',this)">Horoscope</button>
-    <button class="tab" onclick="switchTab('compatibility',this)">Compatibility</button>
+    <button class="tab active" onclick="switchTab('horoscope',this)">Հորոսկոպ</button>
+    <button class="tab" onclick="switchTab('compatibility',this)">Համատեղելիություն</button>
   </div>
 
   <!-- HOROSCOPE -->
   <div id="panel-horoscope" class="panel active">
     <div class="card">
       <div class="birth-section">
-        <label>✦ Find your sign by birth date</label>
+        <label>✦ Գտեք ձեր նշանը ծննդյան ամսաթվով</label>
         <div class="birth-row">
           <input type="date" class="birth-input" id="birthDate">
-          <button class="detect-btn" onclick="detectSign()">Detect ✦</button>
+          <button class="detect-btn" onclick="detectSign()">Որոշել ✦</button>
         </div>
         <div class="detected-sign" id="detectedSign"></div>
       </div>
@@ -154,9 +162,13 @@ body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text);
         <span class="constellation-name" id="constName">Aries</span>
       </div>
       <div class="sign-grid" id="signGrid"></div>
-      <button class="reveal-btn" id="revealBtn" onclick="loadHoroscope()">✦ &nbsp; Read the Stars &nbsp; ✦</button>
-      <div class="loading" id="loading"><div class="orbit"></div><p>Consulting the cosmos</p></div>
-      <div class="error" id="error">⚠ The stars are silent right now. Try again shortly.</div>
+      <button class="reveal-btn" id="revealBtn" onclick="loadHoroscope()">✦ &nbsp; Կարդալ Աստղերը &nbsp; ✦</button>
+      <div class="loading" id="loading">
+        <div class="orbit"></div>
+        <p>Խորհրդակցում կոսմոսի հետ</p>
+        <div class="loading-phase" id="loadingPhase"></div>
+      </div>
+      <div class="error" id="error">⚠ Աստղերն այս պահին լռում են։ Փորձեք կրկին։</div>
       <div class="result" id="result"></div>
     </div>
   </div>
@@ -165,34 +177,33 @@ body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text);
   <div id="panel-compatibility" class="panel">
     <div class="card">
       <div class="compat-labels">
-        <span>✦ Your Sign</span>
-        <span>Their Sign ✦</span>
+        <span>✦ Ձեր Նշանը</span>
+        <span>Նրա Նշանը ✦</span>
       </div>
       <div class="sign-grid" id="compatGrid"></div>
-      <button class="reveal-btn" id="compatBtn" onclick="checkCompatibility()">✦ &nbsp; Check Bond &nbsp; ✦</button>
-      <div class="loading" id="compatLoading"><div class="orbit"></div><p>Aligning the stars</p></div>
+      <button class="reveal-btn" id="compatBtn" onclick="checkCompatibility()">✦ &nbsp; Ստուգել Կապը &nbsp; ✦</button>
+      <div class="loading" id="compatLoading"><div class="orbit"></div><p>Հավասարեցնում ենք աստղերը</p></div>
       <div class="compat-result" id="compatResult"></div>
     </div>
   </div>
 
-  <p class="footer">✦ Updated daily at midnight ✦</p>
+  <p class="footer">✦ Թարմացվում է ամեն օր կեսգիշերին ✦</p>
 </div>
 
 <script>
-/* DATA */
 const SIGNS = [
-  {name:"Aries",      emoji:"♈",sym:"🐏",start:[3,21],end:[4,20], element:"Fire", ruling:"Mars"},
-  {name:"Taurus",     emoji:"♉",sym:"🐂",start:[4,20],end:[5,20], element:"Earth",ruling:"Venus"},
-  {name:"Gemini",     emoji:"♊",sym:"👯",start:[5,21],end:[6,20], element:"Air",  ruling:"Mercury"},
-  {name:"Cancer",     emoji:"♋",sym:"🦀",start:[6,21],end:[7,22], element:"Water",ruling:"Moon"},
-  {name:"Leo",        emoji:"♌",sym:"🦁",start:[7,23],end:[8,22], element:"Fire", ruling:"Sun"},
-  {name:"Virgo",      emoji:"♍",sym:"🌾",start:[8,23],end:[9,22], element:"Earth",ruling:"Mercury"},
-  {name:"Libra",      emoji:"♎",sym:"⚖️",start:[9,23],end:[10,22],element:"Air",  ruling:"Venus"},
-  {name:"Scorpio",    emoji:"♏",sym:"🦂",start:[10,23],end:[11,21],element:"Water",ruling:"Pluto"},
-  {name:"Sagittarius",emoji:"♐",sym:"🏹",start:[11,22],end:[12,21],element:"Fire", ruling:"Jupiter"},
-  {name:"Capricorn",  emoji:"♑",sym:"🐐",start:[12,22],end:[1,19], element:"Earth",ruling:"Saturn"},
-  {name:"Aquarius",   emoji:"♒",sym:"🏺",start:[1,20],end:[2,18],  element:"Air",  ruling:"Uranus"},
-  {name:"Pisces",     emoji:"♓",sym:"🐟",start:[2,19],end:[3,20],  element:"Water",ruling:"Neptune"}
+  {name:"Aries",      nameHY:"Խոյ",      emoji:"♈",sym:"🐏",start:[3,21],end:[4,20], element:"Կրակ",   elementEN:"Fire",  ruling:"Մարս"},
+  {name:"Taurus",     nameHY:"Ցուլ",      emoji:"♉",sym:"🐂",start:[4,20],end:[5,20], element:"Երկիր",  elementEN:"Earth", ruling:"Վեներա"},
+  {name:"Gemini",     nameHY:"Երկվորյակ", emoji:"♊",sym:"👯",start:[5,21],end:[6,20], element:"Օդ",     elementEN:"Air",   ruling:"Մերկուրի"},
+  {name:"Cancer",     nameHY:"Խեցգետին",  emoji:"♋",sym:"🦀",start:[6,21],end:[7,22], element:"Ջուր",   elementEN:"Water", ruling:"Լուսին"},
+  {name:"Leo",        nameHY:"Առյուծ",    emoji:"♌",sym:"🦁",start:[7,23],end:[8,22], element:"Կրակ",   elementEN:"Fire",  ruling:"Արև"},
+  {name:"Virgo",      nameHY:"Կույս",     emoji:"♍",sym:"🌾",start:[8,23],end:[9,22], element:"Երկիր",  elementEN:"Earth", ruling:"Մերկուրի"},
+  {name:"Libra",      nameHY:"Կշեռք",    emoji:"♎",sym:"⚖️",start:[9,23],end:[10,22],element:"Օդ",     elementEN:"Air",   ruling:"Վեներա"},
+  {name:"Scorpio",    nameHY:"Կարիճ",    emoji:"♏",sym:"🦂",start:[10,23],end:[11,21],element:"Ջուր",  elementEN:"Water", ruling:"Պլուտոն"},
+  {name:"Sagittarius",nameHY:"Աղեղնավոր",emoji:"♐",sym:"🏹",start:[11,22],end:[12,21],element:"Կրակ",  elementEN:"Fire",  ruling:"Յուպիտեր"},
+  {name:"Capricorn",  nameHY:"Այծեղջյուր",emoji:"♑",sym:"🐐",start:[12,22],end:[1,19],element:"Երկիր", elementEN:"Earth", ruling:"Սատուռն"},
+  {name:"Aquarius",   nameHY:"Ջրհոս",    emoji:"♒",sym:"🏺",start:[1,20],end:[2,18],  element:"Օդ",    elementEN:"Air",   ruling:"Ուրան"},
+  {name:"Pisces",     nameHY:"Ձկներ",    emoji:"♓",sym:"🐟",start:[2,19],end:[3,20],  element:"Ջուր",  elementEN:"Water", ruling:"Նեպտուն"}
 ];
 
 const CONSTELLATIONS = {
@@ -217,29 +228,29 @@ const COMPAT_MATRIX = {
   Water:{Fire:55,Earth:85,Air:50,Water:88}
 };
 
-const COMPAT_DESCS = {
-  "Fire-Fire":   "Two flames burning together — passionate, energetic, never dull. Just take turns fanning each other's spark.",
-  "Earth-Fire":  "Fire brings spark; Earth brings roots. Friction becomes fuel when you respect what the other offers.",
-  "Air-Fire":    "A natural match — Air feeds Fire's dreams and Fire keeps Air's ideas alive. Playful, intellectual, magnetic.",
-  "Fire-Water":  "Steam and tension. Deep attraction meets constant friction. Works beautifully when both honor the difference.",
-  "Earth-Earth": "Stable, loyal, enduring. You speak the same love language: consistency, comfort, and quiet devotion.",
-  "Air-Earth":   "One plans, one dreams. Together you cover every angle — if you learn to meet each other halfway.",
-  "Earth-Water": "Earth holds Water gently. One of the most nourishing pairings — emotional depth meets practical care.",
-  "Air-Air":     "Effortless conversation, shared curiosity, mental fireworks. Commitment may need more intentional nurturing.",
-  "Air-Water":   "A poetic pairing full of feeling and thought. Misunderstandings are possible, but empathy runs deep.",
-  "Water-Water": "Oceanic depths. Profoundly intuitive and emotionally bonded — just be sure to come up for air sometimes."
+const COMPAT_DESCS_HY = {
+  "Fire-Fire":   "Երկու բոց, որ այրվում են միասին — կրքոտ, եռանդուն, երբեք ձանձրալի չի։ Պարզապես հերթափոխ կրակը կերակրեք իրար։",
+  "Earth-Fire":  "Կրակը բերում է կայծ, Երկիրը՝ արմատներ։ Շփումը դառնում է վառելիք, երբ հարգում եք իրար ունեցածը։",
+  "Air-Fire":    "Բնական կապ — Օդը սնուցում է Կրակի երազները, Կրակը պահպանում Օդի գաղափարները։ Ուրախ, ինտելեկտուալ, հրապուրիչ։",
+  "Fire-Water":  "Գոլոր և լարվածություն։ Խոր գրավչություն հանդիպում է անընդհատ շփման հետ։ Լավ է աշխատում, երբ երկուսն էլ պատվում են տարբերությունը։",
+  "Earth-Earth": "Կայուն, հավատարիմ, հարատև։ Դուք խոսում եք սիրո նույն լեզվով՝ հետևողականություն, հարմարավետություն, հանգիստ նվիրվածություն։",
+  "Air-Earth":   "Մեկը պլանավորում է, մյուսը երազում։ Միասին ծածկում եք բոլոր անկյունները — եթե սովորում եք կեսճանապարհին հանդիպել։",
+  "Earth-Water": "Երկիրն Ջուրն ատկ պահում է։ Ամենասնուցող զույգերից մեկը — հուզական խորությունը հանդիպում է գործնական խնամքի հետ։",
+  "Air-Air":     "Անջատ խոսակցություն, ընդհանուր հետաքրքրություն, մտավոր 花火 (hanabi)։ Պարտավորությունը կարող է ավելի կանխամտածված խնամք պահանջել։",
+  "Air-Water":   "Բանաստեղծական զույգ, լի զգացմունքով ու մտքով։ Թյուրիմացություններ հնարավոր են, բայց կարեկցանքը խոր է։",
+  "Water-Water": "Ոսկե խորություններ։ Խորապես ինտուիտիվ և հուզականորեն կապված — պարզապես մի անգամ էլ շնչեք թարմ օդ։"
 };
 
-const MOODS  = ["✨ Inspired","💫 Serene","🔥 Energized","🌙 Reflective","⚡ Bold","🌊 Flowing","🌸 Gentle","🌟 Radiant"];
-const COLORS = ["Midnight Blue","Deep Crimson","Forest Green","Rose Gold","Amber","Violet","Ivory","Teal"];
+const MOODS_HY  = ["✨ Ոգեշնչված","💫 Խաղաղ","🔥 Եռանդուն","🌙 Մտածկոտ","⚡ Համարձակ","🌊 Հոսուն","🌸 Մեղմ","🌟 Փայլուն"];
+const COLORS_HY = ["Կեսգիշերային Կապույտ","Մուգ Բոսոր","Անտառ Կանաչ","Վարդագույն Ոսկի","Սաթ","Մանուշակ","Փղոսկր","Կապաճ"];
 
-/* STATE */
 let selectedSign = SIGNS[0];
 let compatSignA  = SIGNS[0];
 let compatSignB  = SIGNS[1];
 let compatPickB  = false;
+let currentLang  = 'hy'; // 'hy' or 'en'
+let currentData  = null;
 
-/* TABS */
 function switchTab(name, btn) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -247,7 +258,6 @@ function switchTab(name, btn) {
   document.getElementById('panel-'+name).classList.add('active');
 }
 
-/* BIRTH DATE */
 function detectSign() {
   const val = document.getElementById('birthDate').value;
   if (!val) return;
@@ -256,7 +266,7 @@ function detectSign() {
   const sign = getSignFromDate(m, day);
   const idx  = SIGNS.findIndex(s=>s.name===sign.name);
   const box  = document.getElementById('detectedSign');
-  box.textContent = `${sign.emoji} Your sign is ${sign.name} — ${sign.element} · Ruling ${sign.ruling}`;
+  box.textContent = `${sign.emoji} Ձեր նշանն է ${sign.nameHY} — ${sign.element} · Կառավարիչ ${sign.ruling}`;
   box.classList.add('show');
   selectSign(idx);
 }
@@ -270,7 +280,6 @@ function getSignFromDate(m, d) {
   return SIGNS[0];
 }
 
-/* CONSTELLATION */
 const constCanvas = document.getElementById('constCanvas');
 const constCtx    = constCanvas.getContext('2d');
 
@@ -281,15 +290,11 @@ function drawConstellation(signName) {
   constCtx.scale(dpr,dpr);
   constCtx.clearRect(0,0,W,H);
   const px = pts.map(p=>[p[0]*W, p[1]*H]);
-
-  // lines
   constCtx.strokeStyle='rgba(201,169,110,0.22)';
   constCtx.lineWidth=1;
   constCtx.beginPath();
   px.forEach(([x,y],i)=>i===0?constCtx.moveTo(x,y):constCtx.lineTo(x,y));
   constCtx.stroke();
-
-  // stars
   px.forEach(([x,y],i)=>{
     const r=i===0?3.5:2.5;
     const g=constCtx.createRadialGradient(x,y,0,x,y,r*4);
@@ -303,13 +308,12 @@ function drawConstellation(signName) {
   document.getElementById('constName').textContent=signName;
 }
 
-/* SIGN GRIDS */
 function buildGrid(id, clickFn) {
   const grid=document.getElementById(id);
   SIGNS.forEach((s,i)=>{
     const btn=document.createElement('button');
     btn.className='sign-btn'; btn.dataset.index=i;
-    btn.innerHTML=`<span class="emoji">${s.emoji}</span><span class="label">${s.name.slice(0,3)}</span>`;
+    btn.innerHTML=`<span class="emoji">${s.emoji}</span><span class="label">${s.nameHY.slice(0,4)}</span>`;
     btn.onclick=()=>clickFn(i);
     grid.appendChild(btn);
   });
@@ -342,12 +346,10 @@ function selectCompatSign(i) {
   }
 }
 
-// defaults
 selectSign(0);
 document.querySelectorAll('#compatGrid .sign-btn')[0].classList.add('active');
 document.querySelectorAll('#compatGrid .sign-btn')[1].classList.add('active-b');
 
-/* BG STARS */
 const bgCanvas=document.getElementById('cosmos'), bgCtx=bgCanvas.getContext('2d');
 let bgStars=[];
 function resizeBg() {
@@ -361,62 +363,173 @@ function drawBg(t) {
 }
 window.addEventListener('resize',resizeBg); resizeBg(); requestAnimationFrame(drawBg);
 
-/* HOROSCOPE */
-function cacheKey(sign){return`celestia_${sign}_${new Date().toDateString()}`;}
+/* TRANSLATION via MyMemory free API (no key needed) */
+async function translateToArmenian(text) {
+  // Split into sentences to stay under MyMemory's 500-char limit per request
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  const chunks = [];
+  let current = '';
+  for (const s of sentences) {
+    if ((current + s).length > 480) {
+      if (current) chunks.push(current.trim());
+      current = s;
+    } else {
+      current += s;
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+
+  const translated = [];
+  for (const chunk of chunks) {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|hy`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const t = data?.responseData?.translatedText;
+    translated.push(t && t !== chunk ? t : chunk);
+    await delay(200); // be polite to the free API
+  }
+  return translated.join(' ');
+}
+
+function cacheKey(sign) { return `celestia_v3_${sign}_${new Date().toDateString()}`; }
+
+(function clearOldCache() {
+  const toDelete = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith("celestia_") && !k.startsWith("celestia_v3_")) toDelete.push(k);
+  }
+  toDelete.forEach(k => localStorage.removeItem(k));
+})();
+
+function setPhase(msg) {
+  const el = document.getElementById('loadingPhase');
+  if (el) el.textContent = msg;
+}
 
 async function loadHoroscope() {
   const btn=document.getElementById('revealBtn'), loading=document.getElementById('loading');
   const resultEl=document.getElementById('result'), errorEl=document.getElementById('error');
   resultEl.classList.remove('show'); errorEl.classList.remove('show');
   loading.classList.add('show'); btn.disabled=true;
-  const key=cacheKey(selectedSign.name), cached=localStorage.getItem(key);
-  if (cached){await delay(800);loading.classList.remove('show');btn.disabled=false;showResult(JSON.parse(cached));return;}
+  setPhase('');
+
+  const key = cacheKey(selectedSign.name);
+  const cached = localStorage.getItem(key);
+  if (cached) {
+    await delay(500);
+    loading.classList.remove('show'); btn.disabled=false;
+    currentData = JSON.parse(cached);
+    showResult(currentData);
+    return;
+  }
+
   try {
-    const res=await fetch(`https://corsproxy.io/?https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign=${selectedSign.name}&day=today`);
-    const json=await res.json(), api=json.data;
-    const data={sign:api.sign||selectedSign.name,emoji:selectedSign.sym,description:api.horoscope,date:api.date||new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'}),lucky_number:Math.floor(Math.random()*99)+1,lucky_color:COLORS[Math.floor(Math.random()*COLORS.length)],mood:MOODS[Math.floor(Math.random()*MOODS.length)],element:selectedSign.element,ruling:selectedSign.ruling};
-    localStorage.setItem(key,JSON.stringify(data));
-    await delay(800); loading.classList.remove('show'); btn.disabled=false; showResult(data);
-  } catch(e){await delay(600);loading.classList.remove('show');btn.disabled=false;errorEl.classList.add('show');}
+    setPhase('Ստանում ենք հորոսկոպ...');
+    const res = await fetch(`https://corsproxy.io/?https://horoscope-app-api.vercel.app/api/v1/get-horoscope/daily?sign=${selectedSign.name}&day=today`);
+    const json = await res.json();
+    const api = json.data;
+    const englishDesc = api.horoscope || '';
+
+    setPhase('Թարգմանում ենք հայերեն...');
+    const armenianDesc = await translateToArmenian(englishDesc);
+
+    const moodIdx = Math.floor(Math.random()*MOODS_HY.length);
+    const colorIdx = Math.floor(Math.random()*COLORS_HY.length);
+
+    const data = {
+      sign: selectedSign.nameHY,
+      signEN: selectedSign.name,
+      emoji: selectedSign.sym,
+      descriptionEN: englishDesc,
+      descriptionHY: armenianDesc,
+      date: api.date || new Date().toLocaleDateString('hy-AM', {weekday:'long',month:'long',day:'numeric'}),
+      lucky_number: Math.floor(Math.random()*99)+1,
+      lucky_color: COLORS_HY[colorIdx],
+      mood: MOODS_HY[moodIdx],
+      element: selectedSign.element,
+      ruling: selectedSign.ruling
+    };
+
+    localStorage.setItem(key, JSON.stringify(data));
+    loading.classList.remove('show'); btn.disabled=false;
+    currentData = data;
+    currentLang = 'hy';
+    showResult(data);
+  } catch(e) {
+    console.error(e);
+    await delay(400);
+    loading.classList.remove('show'); btn.disabled=false;
+    errorEl.classList.add('show');
+  }
 }
 
 function showResult(data) {
-  const el=document.getElementById('result');
-  el.innerHTML=`<div class="result-header"><div class="result-emoji">${data.emoji}</div><div class="result-meta"><h3>${data.sign}</h3><p class="date">${data.date}</p></div></div><p class="result-text">${data.description}</p><div class="stats"><div class="stat"><div class="stat-label">Lucky Number</div><div class="stat-value">${data.lucky_number}</div></div><div class="stat"><div class="stat-label">Lucky Color</div><div class="stat-value" style="font-size:13px">${data.lucky_color}</div></div><div class="stat"><div class="stat-label">Element</div><div class="stat-value" style="font-size:14px">${data.element}</div></div><div class="stat"><div class="stat-label">Ruling Planet</div><div class="stat-value" style="font-size:13px">${data.ruling}</div></div><div class="stat full"><div class="stat-label">Today's Energy</div><div class="stat-value" style="font-size:15px">${data.mood}</div></div></div>`;
+  const el = document.getElementById('result');
+  const desc = (currentLang === 'hy' && data.descriptionHY) ? data.descriptionHY : data.descriptionEN;
+  const langEN = currentLang === 'en' ? 'active' : '';
+  const langHY = currentLang === 'hy' ? 'active' : '';
+
+  el.innerHTML = `
+    <div class="result-header">
+      <div class="result-emoji">${data.emoji}</div>
+      <div class="result-meta">
+        <h3>${data.sign}</h3>
+        <p class="date">${data.date}</p>
+      </div>
+    </div>
+    <div class="lang-toggle">
+      <button class="lang-btn ${langHY}" onclick="switchLang('hy')">🇦🇲 Հայերեն</button>
+      <button class="lang-btn ${langEN}" onclick="switchLang('en')">🇬🇧 English</button>
+    </div>
+    ${currentLang==='hy' ? '<div class="translated-badge">Թարգմանված AI-ի կողմից</div>' : ''}
+    <p class="result-text">${desc}</p>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">Բախտի Թիվ</div><div class="stat-value">${data.lucky_number}</div></div>
+      <div class="stat"><div class="stat-label">Բախտի Գույն</div><div class="stat-value" style="font-size:13px">${data.lucky_color}</div></div>
+      <div class="stat"><div class="stat-label">Տարր</div><div class="stat-value" style="font-size:14px">${data.element}</div></div>
+      <div class="stat"><div class="stat-label">Կառավարիչ Մոլորակ</div><div class="stat-value" style="font-size:13px">${data.ruling}</div></div>
+      <div class="stat full"><div class="stat-label">Օրվա Էներգիա</div><div class="stat-value" style="font-size:15px">${data.mood}</div></div>
+    </div>`;
+
   el.style.display='block';
   requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
 }
 
-/* COMPATIBILITY */
+function switchLang(lang) {
+  if (!currentData) return;
+  currentLang = lang;
+  showResult(currentData);
+}
+
 async function checkCompatibility() {
   const aSet=document.querySelector('#compatGrid .sign-btn.active');
   const bSet=document.querySelector('#compatGrid .sign-btn.active-b');
-  if(!aSet||!bSet){alert('Tap once to pick your sign (gold), tap again to pick their sign (violet).');return;}
+  if(!aSet||!bSet){alert('Սեղմեք մեկ անգամ ձեր նշանի վրա (ոսկի), հետո՝ նրա նշանի վրա (մանուշակ)։');return;}
   const btn=document.getElementById('compatBtn'), loading=document.getElementById('compatLoading');
   const res=document.getElementById('compatResult');
   res.classList.remove('show'); loading.classList.add('show'); btn.disabled=true;
   await delay(1100); loading.classList.remove('show'); btn.disabled=false;
 
-  const ea=compatSignA.element, eb=compatSignB.element;
+  const ea=compatSignA.elementEN, eb=compatSignB.elementEN;
   const base=COMPAT_MATRIX[ea][eb];
   const score=Math.min(99,Math.max(30,base+rand(-4,4)));
-  const cats={Love:clamp(score+rand(-10,10)),Friendship:clamp(score+rand(-8,8)),Communication:clamp(score+rand(-12,12)),Longevity:clamp(score+rand(-10,10))};
+  const cats={Սեր:clamp(score+rand(-10,10)),Բարեկամություն:clamp(score+rand(-8,8)),Հաղորդակցություն:clamp(score+rand(-12,12)),Կայունություն:clamp(score+rand(-10,10))};
 
-  // pick description key
   const order=['Fire','Earth','Air','Water'];
   const sorted=[ea,eb].sort((a,b)=>order.indexOf(a)-order.indexOf(b));
   const descKey=sorted.join('-');
-  const desc=COMPAT_DESCS[descKey]||"A unique celestial pairing with its own cosmic story to write together.";
+  const desc=COMPAT_DESCS_HY[descKey]||"Յուրահատուկ երկնային զույգ, որի սեփական կոսմիկ պատմությունը գրելու է։";
 
   const c=score>=80?'#f0d090':score>=65?'#c4b5fd':score>=50?'#93c5fd':'#fca5a5';
-  const label=score>=80?'Celestial Match':score>=65?'Strong Bond':score>=50?'Complementary':'Growth Pair';
+  const label=score>=80?'Երկնային Զույգ':score>=65?'Ամուր Կապ':score>=50?'Լրացնող':'Աճի Զույգ';
   const circ=Math.round(score*3.14);
 
   res.innerHTML=`
     <div class="compat-pair">
-      <span class="sign-pill a">${compatSignA.emoji} ${compatSignA.name}</span>
+      <span class="sign-pill a">${compatSignA.emoji} ${compatSignA.nameHY}</span>
       <span class="heart">💫</span>
-      <span class="sign-pill b">${compatSignB.emoji} ${compatSignB.name}</span>
+      <span class="sign-pill b">${compatSignB.emoji} ${compatSignB.nameHY}</span>
     </div>
     <div class="score-ring-wrap">
       <svg width="120" height="120" viewBox="0 0 120 120" style="overflow:visible">
